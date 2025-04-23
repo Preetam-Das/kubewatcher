@@ -1,0 +1,19 @@
+apiVersion: kubewatcher.internal/v1alpha1
+kind: ImageList
+metadata:
+  name: image-list
+  namespace: default
+spec:
+  images:
+    - scratch
+---
+
+apiVersion: kubewatcher.internal/v1alpha1
+kind: ImageDepoMap
+metadata:
+  name: image-depo-map
+  namespace: default
+spec:
+  mappings:
+    scratch:
+      - testdepo

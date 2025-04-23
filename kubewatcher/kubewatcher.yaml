@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubewatcher-deployment
+  labels:
+    app: kubewatcher
+spec:
+  selector:
+    matchLabels:
+      app: kubewatcher
+  template:
+    metadata:
+      labels:
+        app: kubewatcher
+    spec:
+      serviceAccountName: kubewatcher-sa
+      containers:
+      - name: kubewatcher
+        image: preetamsad/kubewatcher
+        imagePullPolicy: Always

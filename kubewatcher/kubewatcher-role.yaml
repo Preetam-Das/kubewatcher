@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: kubewatcher-role
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "watch", "list"]
+- apiGroups: ["kubewatcher.internal"]
+  resources: ["imagelists", "imagedepomaps"]
+  verbs: ["get", "watch", "list", "create", "update"]
