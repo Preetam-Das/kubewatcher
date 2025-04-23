@@ -15,14 +15,14 @@ if __name__ == "__main__":
     print(image_depo_dict)
 
     # Put into CR
-    populate_imagelist(objapi, image_list)
-    print(image_list)
+    populate_image_list(objapi, image_list)
+    populate_image_depo_dict(objapi, image_depo_dict)
 
     # Create & start poller cronjob
 
     # watch & update CRs for new depo
     # in seperate thread
-    nd_watcher = Thread(target=watch_depo, args=(api, image_list, image_depo_dict), daemon=True)
+    nd_watcher = Thread(target=watch_depo, args=(api, objapi, image_list, image_depo_dict), daemon=True)
     nd_watcher.start()
 
     # watch for redeploy request

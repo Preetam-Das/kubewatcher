@@ -25,9 +25,14 @@ def do1(api, namespace):
         containers = depo.spec.template.spec.containers
         for container in containers:
             image = container.image
-            if image not in image_depo_dict:
+
+            if image not in image_list:
                 image_list.append(image)
-                image_depo_dict[container.image] = deponame
+
+            if image not in image_depo_dict:
+                image_depo_dict[image] = [deponame]
+            elif deponame not in image_depo_dict[container.image]:
+                image_depo_dict[image].append(deponame)
 
     return (image_list, image_depo_dict)
 
@@ -93,7 +98,7 @@ def poll_registry(image_digest_dict):
             # mark for update
             print(f'old: {image_digest_dict[image]}\nnew: {new_digest}')
 
-def watch_depo(api, image_list, image_depo_dict):
+def watch_depo(api, objapi, image_list, image_depo_dict):
     """
     Watch new deployment events and trigger CR and poller update
     """
@@ -110,33 +115,43 @@ def watch_depo(api, image_list, image_depo_dict):
                 print("ADDED %s" % deponame)
                 for container in containers:
                     image = container.image
+
                     if image not in image_list:
                         image_list.append(image)
+
                     if image not in image_depo_dict:
-                        image_depo_dict[container.image] = deponame
+                        image_depo_dict[image] = [deponame]
+                    elif deponame not in image_depo_dict[container.image]:
+                        image_depo_dict[image].append(deponame)
 
                 # call to update CRs
+                populate_image_list(objapi, image_list)
+                populate_image_depo_dict(objapi, image_depo_dict)
                 # call to one shot poll job
 
             case "DELETED":
                 print("DELETED %s" % deponame)
                 for container in containers:
                     image = container.image
+
                     if image in image_depo_dict:
-                        del image_depo_dict[container.image]
-                    if image in image_list:
-                        image_list.remove(image)
+                        if deponame in image_depo_dict[image]:
+                            image_depo_dict[image].remove(deponame)
+
+                            # if the image has no assoicated depos
+                            if not image_depo_dict[image]:
+                                # delete the image
+                                del image_depo_dict[image]
+                                if image in image_list:
+                                    image_list.remove(image)
 
                 # call to update CRs
+                populate_image_list(objapi, image_list)
+                populate_image_depo_dict(objapi, image_depo_dict)
 
             # TODO: Handle MODIFIED
 
-def watch_redepo_req(image_list):
-    print("Watching for reqdeploy requests. - dummy implementation")
-    while True:
-        pass
-
-def getimage_list_cr(objapi):
+def get_image_list_cr(objapi):
     image_list_cr = objapi.get_namespaced_custom_object(
             "kubewatcher.internal",
             "v1alpha1",
@@ -146,9 +161,19 @@ def getimage_list_cr(objapi):
             )
     return image_list_cr
 
-def update_image_list_cr(objapi, imagelist, image_list_cr):
+def get_image_depo_dict_cr(objapi):
+    image_depo_dict_cr = objapi.get_namespaced_custom_object(
+            "kubewatcher.internal",
+            "v1alpha1",
+            "default",
+            "imagedepomaps",
+            "image-depo-map"
+            )
+    return image_depo_dict_cr
+
+def update_image_list_cr(objapi, image_list, image_list_cr):
     # update
-    image_list_cr["spec"]["images"] = imagelist
+    image_list_cr["spec"]["images"] = image_list
     objapi.replace_namespaced_custom_object(
             "kubewatcher.internal",
             "v1alpha1",
@@ -158,10 +183,36 @@ def update_image_list_cr(objapi, imagelist, image_list_cr):
             image_list_cr
             )
 
-def populate_imagelist(objapi, imagelist):
+def update_image_depo_dict_cr(objapi, image_depo_dict, image_depo_dict_cr):
+    # update
+    image_depo_dict_cr["spec"]["mappings"] = image_depo_dict
+    objapi.replace_namespaced_custom_object(
+            "kubewatcher.internal",
+            "v1alpha1",
+            "default",
+            "imagedepomaps",
+            "image-depo-map",
+            image_depo_dict_cr
+            )
+
+def populate_image_list(objapi, image_list):
     """
-    Populate empty imagelist instance
+    Populate image-list instance
     """
     # get
-    image_list_cr = getimage_list_cr(objapi)
-    update_image_list_cr(objapi, imagelist, image_list_cr)
+    image_list_cr = get_image_list_cr(objapi)
+    update_image_list_cr(objapi, image_list, image_list_cr)
+
+
+def populate_image_depo_dict(objapi, image_depo_dict):
+    """
+    Populate image-depo-map instance
+    """
+    # get
+    image_depo_dict_cr = get_image_depo_dict_cr(objapi)
+    update_image_depo_dict_cr(objapi, image_depo_dict, image_depo_dict_cr)
+
+def watch_redepo_req(image_list):
+    print("Watching for reqdeploy requests. - dummy implementation")
+    while True:
+        pass
