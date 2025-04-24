@@ -1,7 +1,18 @@
 import requests as req
-from kubernetes import watch
+from kubernetes import watch, client
 
 res_ver = 0
+
+def get_cron_job(batchapi):
+    name = "registry-watcher"
+    namespace = "default"
+
+    cronjob_list = batchapi.list_namespaced_cron_job(namespace = namespace, \
+            field_selector = f"metadata.name={name}")
+
+    if cronjob_list.items:
+        cronjob = cronjob_list.items[0]
+        return cronjob
 
 def do1(api, namespace):
     """

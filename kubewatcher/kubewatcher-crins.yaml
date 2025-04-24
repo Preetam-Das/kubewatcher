@@ -4,8 +4,7 @@ metadata:
   name: image-list
   namespace: default
 spec:
-  images:
-    - scratch
+  images: []
 ---
 
 apiVersion: kubewatcher.internal/v1alpha1
@@ -14,6 +13,22 @@ metadata:
   name: image-depo-map
   namespace: default
 spec:
-  mappings:
-    scratch:
-      - testdepo
+  mappings: {}
+---
+
+apiVersion: kubewatcher.internal/v1alpha1
+kind: UpDepoList
+metadata:
+  name: updepo-list
+  namespace: default
+spec:
+  depos: []
+---
+
+apiVersion: kubewatcher.internal/v1alpha1
+kind: ImageDigestMap
+metadata:
+  name: image-digest-map
+  namespace: default
+spec:
+  mappings: {}

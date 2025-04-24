@@ -1,3 +1,4 @@
+# Image list
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -27,6 +28,8 @@ spec:
     shortNames:
       - imgl
 ---
+
+# Image - Deployment map
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
@@ -56,4 +59,66 @@ spec:
     singular: imagedepomap
     kind: ImageDepoMap
     shortNames:
-      - imgdm
+      - imgdpm
+---
+
+# Image - Digest map
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: imagedigestmaps.kubewatcher.internal
+spec:
+  group: kubewatcher.internal
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                mappings:
+                  type: object
+                  additionalProperties:
+                    type: string
+  names:
+    plural: imagedigestmaps
+    singular: imagedigestmap
+    kind: ImageDigestMap
+    shortNames:
+      - imgdgm
+---
+
+# To update deployment list
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: updepolists.kubewatcher.internal
+spec:
+  group: kubewatcher.internal
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                depos:
+                  type: array
+                  items:
+                    type: string
+  names:
+    plural: updepolists
+    singular: updepolist
+    kind: UpDepoList
+    shortNames:
+      - updpl

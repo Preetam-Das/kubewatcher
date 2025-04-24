@@ -5,9 +5,11 @@ from threading import Thread
 if __name__ == "__main__":
 
     # load config
-    config.load_incluster_config()
+    config.load_kube_config()
+    # config.load_incluster_config()
     api = client.AppsV1Api()
     objapi = client.CustomObjectsApi()
+    batchapi = client.BatchV1Api()
 
     # Get required list and map
     image_list, image_depo_dict = do1(api, "default")
@@ -18,7 +20,10 @@ if __name__ == "__main__":
     populate_image_list(objapi, image_list)
     populate_image_depo_dict(objapi, image_depo_dict)
 
-    # Create & start poller cronjob
+    # get poller cronjob
+    cronjob = get_cron_job(batchapi)
+    if cronjob:
+        print(cronjob.metadata.name)
 
     # watch & update CRs for new depo
     # in seperate thread
