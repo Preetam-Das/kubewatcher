@@ -23,4 +23,7 @@ if __name__ == "__main__":
     # Iterate through image list to update digests & updepo
     poll_udpate(objapi, image_list, image_digest_dict, updepo_list)
 
+    # updepo_list.append("preetamsad/version:latest")
+    # update_updepo_list_cr(objapi, updepo_list)
+
     pass

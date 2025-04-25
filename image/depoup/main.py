@@ -13,8 +13,8 @@ if __name__ == "__main__":
 
     # Get required list and map
     image_list, image_depo_dict = do1(api, "default")
-    print(image_list)
-    print(image_depo_dict)
+    # print(image_list)
+    # print(image_depo_dict)
 
     # Put into CR
     populate_image_list(objapi, image_list)
@@ -30,5 +30,12 @@ if __name__ == "__main__":
     nd_watcher = Thread(target=watch_depo, args=(api, objapi, image_list, image_depo_dict), daemon=True)
     nd_watcher.start()
 
+    # Get other list and map
+    # updepo_list = get_updepo_list(objapi)
+    # image_digest_dict = get_image_digest_dict(objapi)
+    # print(updepo_list)
+    # print(image_digest_dict)
+
     # watch for redeploy request
-    watch_redepo_req(image_list)
+    appapi = api
+    watch_redepo_req(objapi, appapi, image_depo_dict)

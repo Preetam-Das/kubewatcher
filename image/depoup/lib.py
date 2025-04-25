@@ -1,5 +1,7 @@
 import requests as req
 from kubernetes import watch, client
+from time import sleep
+import datetime
 
 res_ver = 0
 
@@ -46,21 +48,6 @@ def do1(api, namespace):
                 image_depo_dict[image].append(deponame)
 
     return (image_list, image_depo_dict)
-
-def get_image_digest_dict(image_depo_dict):
-    """
-    Get a map of image vs digest
-    """
-    image_digest_dict = dict()
-
-    for image in image_depo_dict:
-
-        digest = get_image_digest(image)
-
-        if image not in image_digest_dict:
-            image_digest_dict[image] = digest # anyway to avoid storing whole 72 bytes here?
-
-        return image_digest_dict
 
 def get_apiep(image):
     """
@@ -223,7 +210,104 @@ def populate_image_depo_dict(objapi, image_depo_dict):
     image_depo_dict_cr = get_image_depo_dict_cr(objapi)
     update_image_depo_dict_cr(objapi, image_depo_dict, image_depo_dict_cr)
 
-def watch_redepo_req(image_list):
+def get_updepo_list(objapi):
+    updepo_list_cr = objapi.get_namespaced_custom_object(
+            "kubewatcher.internal",
+            "v1alpha1",
+            "default",
+            "updepolists",
+            "updepo-list"
+            )
+
+    updepo_list = updepo_list_cr["spec"]["depos"]
+    return updepo_list
+
+def get_image_digest_dict(objapi):
+    image_digest_dict_cr = objapi.get_namespaced_custom_object(
+            "kubewatcher.internal",
+            "v1alpha1",
+            "default",
+            "imagedigestmaps",
+            "image-digest-map"
+            )
+    image_digest_dict = image_digest_dict_cr["spec"]["mappings"]
+    return image_digest_dict
+
+
+def restart_depo(appapi, deponame):
+    # update here
+    depoobjlist = appapi.list_namespaced_deployment(namespace="default", \
+            field_selector = f"metadata.name={deponame}")
+
+    if depoobjlist.items:
+        depoobj = depoobjlist.items[0]
+
+        if (depoobj.metadata.name == deponame):
+            ts = int(datetime.datetime.now().timestamp())
+            print(f"updating {deponame} at {ts}")
+
+            # Update Label
+            depoobj.spec.template.metadata.labels["redeploy_timestamp"] = \
+                     str(ts)
+            # Patch
+            appapi.patch_namespaced_deployment(
+                    depoobj.metadata.name,
+                    depoobj.metadata.namespace,
+                    depoobj)
+
+def get_updepo_list_cr(objapi):
+    updepo_list_cr = objapi.get_namespaced_custom_object(
+            "kubewatcher.internal",
+            "v1alpha1",
+            "default",
+            "updepolists",
+            "updepo-list"
+            )
+    return updepo_list_cr
+
+def update_updepo_list_cr(objapi, updepo_list):
+    # update
+    # getting cr object more than once might have high overhead
+    updepo_list_cr = get_updepo_list_cr(objapi)
+    updepo_list_cr["spec"]["depos"] = updepo_list
+    # print(updepo_list)
+    objapi.replace_namespaced_custom_object(
+            "kubewatcher.internal",
+            "v1alpha1",
+            "default",
+            "updepolists",
+            "updepo-list",
+            updepo_list_cr
+            )
+
+def watch_redepo_req(objapi, appapi, image_depo_dict):
+
     print("Watching for reqdeploy requests. - dummy implementation")
+
+    # loop forever
     while True:
-        pass
+        newimagelist = get_updepo_list(objapi)
+        # while there is image to update
+        while newimagelist:
+            image = newimagelist.pop()
+            # update the cr
+            update_updepo_list_cr(objapi, newimagelist)
+            print(f"got {image} to update")
+            if (image in image_depo_dict):
+                # for all depos where newimage
+                for deponame in image_depo_dict[image]:
+                    print(f"got {deponame} to update")
+                    # update depo
+                    restart_depo(appapi, deponame)
+
+        sleep(1)
+
+
+# depos = appapi.list_namespaced_deployment("default")
+# for depo in depos.items:
+#     for container in depo.spec.template.spec.containers:
+#         print(container.image)
+#         container.image = newimage
+#         print(f'changing to {container.image}')
+#         print('wait to reapply')
+#         appapi.replace_namespaced_deployment(depo.metadata.name, depo.metadata.namespace, depo)

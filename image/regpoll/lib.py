@@ -60,6 +60,7 @@ def poll_udpate(objapi, image_list, image_digest_dict, updepo_list):
                 else:
                     # new digest mark for update
                     # print(f'old: {image_digest_dict[image]}\nnew: {new_digest}')
+                    print(f"to update {image}")
                     image_digest_dict[image] = new_digest
                     updepo_list.append(image)
 
@@ -101,7 +102,8 @@ def update_updepo_list_cr(objapi, updepo_list):
     # update
     # getting cr object more than once might have high overhead
     updepo_list_cr = get_updepo_list_cr(objapi)
-    updepo_list_cr["spec"]["updepos"] = updepo_list
+    updepo_list_cr["spec"]["depos"] = updepo_list
+    print(updepo_list)
     objapi.replace_namespaced_custom_object(
             "kubewatcher.internal",
             "v1alpha1",
