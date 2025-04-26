@@ -1,0 +1,251 @@
+# Main Deployment & Image Watcher
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubewatcher-deployment
+  labels:
+    app: kubewatcher
+spec:
+  selector:
+    matchLabels:
+      app: kubewatcher
+  template:
+    metadata:
+      labels:
+        app: kubewatcher
+    spec:
+      serviceAccountName: kubewatcher-sa
+      containers:
+      - name: kubewatcher
+        image: preetamsad/kubewatcher
+        imagePullPolicy: Always
+---
+
+# Registry Polling Cronjob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: registry-watcher
+  namespace: default
+spec:
+  schedule: '*/1 * * * *'
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: kubewatcher-sa
+          restartPolicy: OnFailure
+          containers:
+          - name: registry-watcher
+            image: preetamsad/registry-watcher
+---
+
+# Custom Resource Empty Instances
+apiVersion: kubewatcher.internal/v1alpha1
+kind: ImageList
+metadata:
+  name: image-list
+  namespace: default
+spec:
+  images: []
+---
+
+apiVersion: kubewatcher.internal/v1alpha1
+kind: ImageDepoMap
+metadata:
+  name: image-depo-map
+  namespace: default
+spec:
+  mappings: {}
+---
+
+apiVersion: kubewatcher.internal/v1alpha1
+kind: UpDepoList
+metadata:
+  name: updepo-list
+  namespace: default
+spec:
+  depos: []
+---
+
+apiVersion: kubewatcher.internal/v1alpha1
+kind: ImageDigestMap
+metadata:
+  name: image-digest-map
+  namespace: default
+spec:
+  mappings: {}
+---
+
+# RBAC Role Bindings
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubewatcher-rb
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: kubewatcher-sa
+  namespace: default
+roleRef:
+  kind: Role
+  name: kubewatcher-role
+  apiGroup: rbac.authorization.k8s.io
+---
+
+# RBAC Roles
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: kubewatcher-role
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "watch", "list", "patch"]
+- apiGroups: ["kubewatcher.internal"]
+  resources: ["imagelists", "imagedepomaps", "updepolists", "imagedigestmaps"]
+  verbs: ["get", "watch", "list", "create", "update"]
+- apiGroups: ["batch"]
+  resources: ["cronjobs"]
+  resourceNames: ["registry-watcher"]
+  verbs: ["get", "list"]
+---
+
+# Service Accounts
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: default
+  name: kubewatcher-sa
+---
+
+# Custom Resource definitions
+# Image list
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: imagelists.kubewatcher.internal
+spec:
+  group: kubewatcher.internal
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                images:
+                  type: array
+                  items:
+                    type: string
+  names:
+    plural: imagelists
+    singular: imagelist
+    kind: ImageList
+    shortNames:
+      - imgl
+---
+
+# Image - Deployment map
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: imagedepomaps.kubewatcher.internal
+spec:
+  group: kubewatcher.internal
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                mappings:
+                  type: object
+                  additionalProperties:
+                    type: array
+                    items:
+                      type: string
+  names:
+    plural: imagedepomaps
+    singular: imagedepomap
+    kind: ImageDepoMap
+    shortNames:
+      - imgdpm
+---
+
+# Image - Digest map
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: imagedigestmaps.kubewatcher.internal
+spec:
+  group: kubewatcher.internal
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                mappings:
+                  type: object
+                  additionalProperties:
+                    type: string
+  names:
+    plural: imagedigestmaps
+    singular: imagedigestmap
+    kind: ImageDigestMap
+    shortNames:
+      - imgdgm
+---
+
+# To update deployment list
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: updepolists.kubewatcher.internal
+spec:
+  group: kubewatcher.internal
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                depos:
+                  type: array
+                  items:
+                    type: string
+  names:
+    plural: updepolists
+    singular: updepolist
+    kind: UpDepoList
+    shortNames:
+      - updpl
+---
+
