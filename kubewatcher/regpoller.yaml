@@ -15,8 +15,4 @@ spec:
           restartPolicy: OnFailure
           containers:
           - name: registry-watcher
-            image: busybox
-            command:
-              - /bin/sh
-              - -c
-              - date
+            image: preetamsad/registry-watcher

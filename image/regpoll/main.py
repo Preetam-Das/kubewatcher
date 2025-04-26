@@ -4,7 +4,8 @@ from lib import *
 if __name__ == "__main__":
 
     # load config
-    config.load_kube_config()
+    config.load_incluster_config()
+    # config.load_kube_config()
     objapi = client.CustomObjectsApi()
 
     # Get required list and map

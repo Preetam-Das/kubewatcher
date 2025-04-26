@@ -5,8 +5,8 @@ from threading import Thread
 if __name__ == "__main__":
 
     # load config
-    config.load_kube_config()
-    # config.load_incluster_config()
+    config.load_incluster_config()
+    # config.load_kube_config()
     api = client.AppsV1Api()
     objapi = client.CustomObjectsApi()
     batchapi = client.BatchV1Api()
