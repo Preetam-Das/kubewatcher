@@ -1,0 +1,18 @@
+Every 2.0s: kubectl get pods                                                                                       archbox: 10:42:50 PM
+                                                                                                                          in 0.105s (0)
+NAME                                     READY   STATUS              RESTARTS   AGE                                                    
+kubewatcher-deployment-f57f84b6f-5rn7p   1/1     Running             0          2m45s                                                  
+registry-watcher-29096231-7k96n          0/1     Completed           0          110s                                                   
+registry-watcher-29096232-kqv8s          0/1     Completed           0          50s                                                    
+testdepo-7f589998b7-45kt4                0/1     ContainerCreating   0          4s                                                     
+testdepo-7f589998b7-smpqs                0/1     ContainerCreating   0          4s                                                     
+testdepo-7f589998b7-t7drd                0/1     ContainerCreating   0          4s                                                     
+                                                                                                                                       
+                                                                                                                                       
+                                                                                                                                       
+                                                                                                                                       
+                                                                                                                                       
+                                                                                                                                       
+                                                                                                                                       
+                                                                                                                                       
+                                                                                                                                       

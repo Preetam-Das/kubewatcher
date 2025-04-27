@@ -150,23 +150,71 @@ def watch_depo(api, objapi, image_list, image_depo_dict):
             # TODO: Handle MODIFIED
 
 def get_image_list_cr(objapi):
-    image_list_cr = objapi.get_namespaced_custom_object(
-            "kubewatcher.internal",
-            "v1alpha1",
-            "default",
-            "imagelists",
-            "image-list"
-            )
+
+    group = "kubewatcher.internal"
+    version = "v1alpha1"
+    namespace = "default"
+    plural = "imagelists"
+    name = "image-list"
+
+    image_list_cr = None
+
+    try:
+        image_list_cr = objapi.get_namespaced_custom_object(
+                "kubewatcher.internal",
+                "v1alpha1",
+                "default",
+                "imagelists",
+                "image-list"
+                )
+    except client.ApiException as e:
+        if e.status == 404:
+            print("imagelists not found. Creating one")
+            image_list_instance = {
+                    "apiVersion": f"{group}/{version}",
+                    "kind": "ImageList",
+                    "metadata": {"name": name, "namespace": namespace},
+                    "spec": {"images": []},
+                    }
+            image_list_cr = objapi.create_namespaced_custom_object(
+                    group, version, namespace, plural, image_list_instance
+                )
+            print(f"ImageList '{name}' created successfully in namespace '{namespace}'")
+
     return image_list_cr
 
 def get_image_depo_dict_cr(objapi):
-    image_depo_dict_cr = objapi.get_namespaced_custom_object(
-            "kubewatcher.internal",
-            "v1alpha1",
-            "default",
-            "imagedepomaps",
-            "image-depo-map"
-            )
+
+    group = "kubewatcher.internal"
+    version = "v1alpha1"
+    namespace = "default"
+    plural = "imagedepomaps"
+    name = "image-depo-map"
+
+    image_depo_dict_cr = None
+
+    try:
+        image_depo_dict_cr = objapi.get_namespaced_custom_object(
+                "kubewatcher.internal",
+                "v1alpha1",
+                "default",
+                "imagedepomaps",
+                "image-depo-map"
+                )
+    except client.ApiException as e:
+        if e.status == 404:
+            print(f"{name} not found. Creating one")
+            image_depo_dict_instance = {
+                    "apiVersion": f"{group}/{version}",
+                    "kind": "ImageDepoMap",
+                    "metadata": {"name": name, "namespace": namespace},
+                    "spec": {"mappings": {}},
+                    }
+            image_depo_dict_cr = objapi.create_namespaced_custom_object(
+                    group, version, namespace, plural, image_depo_dict_instance
+                )
+            print(f"ImageDepoMap '{name}' created successfully in namespace '{namespace}'")
+
     return image_depo_dict_cr
 
 def update_image_list_cr(objapi, image_list, image_list_cr):
@@ -199,6 +247,7 @@ def populate_image_list(objapi, image_list):
     """
     # get
     image_list_cr = get_image_list_cr(objapi)
+    # print(image_list_cr)
     update_image_list_cr(objapi, image_list, image_list_cr)
 
 
@@ -211,28 +260,82 @@ def populate_image_depo_dict(objapi, image_depo_dict):
     update_image_depo_dict_cr(objapi, image_depo_dict, image_depo_dict_cr)
 
 def get_updepo_list(objapi):
-    updepo_list_cr = objapi.get_namespaced_custom_object(
-            "kubewatcher.internal",
-            "v1alpha1",
-            "default",
-            "updepolists",
-            "updepo-list"
-            )
 
-    updepo_list = updepo_list_cr["spec"]["depos"]
+    group = "kubewatcher.internal"
+    version = "v1alpha1"
+    namespace = "default"
+    plural = "updepolists"
+    name = "updepo-list"
+
+    updepo_list_cr = None
+
+    try:
+        updepo_list_cr = objapi.get_namespaced_custom_object(
+                "kubewatcher.internal",
+                "v1alpha1",
+                "default",
+                "updepolists",
+                "updepo-list"
+                )
+    except client.ApiException as e:
+        if e.status == 404:
+            print(f"{name} not found. Creating one")
+            updepo_list_instance = {
+                    "apiVersion": f"{group}/{version}",
+                    "kind": "UpDepoList",
+                    "metadata": {"name": name, "namespace": namespace},
+                    "spec": {"depos": []},
+                    }
+            updepo_list_cr = objapi.create_namespaced_custom_object(
+                    group, version, namespace, plural, updepo_list_instance
+                )
+            print(f"UpDepoList '{name}' created successfully in namespace '{namespace}'")
+
+
+    updepo_list = []
+
+    if updepo_list_cr:
+        updepo_list = updepo_list_cr["spec"]["depos"]
+
     return updepo_list
 
 def get_image_digest_dict(objapi):
-    image_digest_dict_cr = objapi.get_namespaced_custom_object(
-            "kubewatcher.internal",
-            "v1alpha1",
-            "default",
-            "imagedigestmaps",
-            "image-digest-map"
-            )
-    image_digest_dict = image_digest_dict_cr["spec"]["mappings"]
-    return image_digest_dict
 
+    group = "kubewatcher.internal"
+    version = "v1alpha1"
+    namespace = "default"
+    plural = "imagedigestmaps"
+    name = "image-digest-map"
+
+    image_digest_dict_cr = None
+
+    try:
+        image_digest_dict_cr = objapi.get_namespaced_custom_object(
+                "kubewatcher.internal",
+                "v1alpha1",
+                "default",
+                "imagedigestmaps",
+                "image-digest-map"
+                )
+    except client.ApiException as e:
+        if e.status == 404:
+            print(f"{name} not found. Creating one")
+            image_digest_dict_instance = {
+                    "apiVersion": f"{group}/{version}",
+                    "kind": "ImageDigestMap",
+                    "metadata": {"name": name, "namespace": namespace},
+                    "spec": {"mappings": {}},
+                    }
+            image_digest_dict_cr = objapi.create_namespaced_custom_object(
+                    group, version, namespace, plural, image_digest_dict_instance
+                )
+            print(f"ImageDigestMap '{name}' created successfully in namespace '{namespace}'")
+
+    image_digest_dict = []
+
+    if image_digest_dict_cr:
+        image_digest_dict = image_digest_dict_cr["spec"]["mappings"]
+    return image_digest_dict
 
 def restart_depo(appapi, deponame):
     # update here
@@ -256,20 +359,49 @@ def restart_depo(appapi, deponame):
                     depoobj)
 
 def get_updepo_list_cr(objapi):
-    updepo_list_cr = objapi.get_namespaced_custom_object(
-            "kubewatcher.internal",
-            "v1alpha1",
-            "default",
-            "updepolists",
-            "updepo-list"
-            )
+
+    group = "kubewatcher.internal"
+    version = "v1alpha1"
+    namespace = "default"
+    plural = "updepolists"
+    name = "updepo-list"
+
+    updepo_list_cr = None
+
+    try:
+        updepo_list_cr = objapi.get_namespaced_custom_object(
+                "kubewatcher.internal",
+                "v1alpha1",
+                "default",
+                "updepolists",
+                "updepo-list"
+                )
+    except client.ApiException as e:
+        if e.status == 404:
+            print(f"{name} not found. Creating one")
+            updepo_list_instance = {
+                    "apiVersion": f"{group}/{version}",
+                    "kind": "UpDepoList",
+                    "metadata": {"name": name, "namespace": namespace},
+                    "spec": {"depos": []},
+                    }
+            updepo_list_cr = objapi.create_namespaced_custom_object(
+                    group, version, namespace, plural, updepo_list_instance
+                )
+            print(f"UpDepoList '{name}' created successfully in namespace '{namespace}'")
+
     return updepo_list_cr
+
 
 def update_updepo_list_cr(objapi, updepo_list):
     # update
     # getting cr object more than once might have high overhead
     updepo_list_cr = get_updepo_list_cr(objapi)
-    updepo_list_cr["spec"]["depos"] = updepo_list
+    if updepo_list_cr:
+        updepo_list_cr["spec"]["depos"] = updepo_list
+    else:
+        print("no updepo list cr")
+        return
     # print(updepo_list)
     objapi.replace_namespaced_custom_object(
             "kubewatcher.internal",

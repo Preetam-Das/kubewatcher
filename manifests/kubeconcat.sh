@@ -27,10 +27,10 @@ cat kubewatcher-rb.yaml >> $OUT_INSTALL_FILE
 echo "---" >> $OUT_INSTALL_FILE
 echo >> $OUT_INSTALL_FILE
 
-echo "# Custom Resource Empty Instances" >> $OUT_INSTALL_FILE
-cat kubewatcher-crins.yaml >> $OUT_INSTALL_FILE
-echo "---" >> $OUT_INSTALL_FILE
-echo >> $OUT_INSTALL_FILE
+# echo "# Custom Resource Empty Instances" >> $OUT_INSTALL_FILE
+# cat kubewatcher-crins.yaml >> $OUT_INSTALL_FILE
+# echo "---" >> $OUT_INSTALL_FILE
+# echo >> $OUT_INSTALL_FILE
 
 echo "# Registry Polling Cronjob" >> $OUT_INSTALL_FILE
 cat kubewatcher-regpoll.yaml >> $OUT_INSTALL_FILE
@@ -54,10 +54,10 @@ cat kubewatcher-regpoll.yaml >> $OUT_UNINSTALL_FILE
 echo "---" >> $OUT_UNINSTALL_FILE
 echo >> $OUT_UNINSTALL_FILE
 
-echo "# Custom Resource Empty Instances" >> $OUT_UNINSTALL_FILE
-cat kubewatcher-crins.yaml >> $OUT_UNINSTALL_FILE
-echo "---" >> $OUT_UNINSTALL_FILE
-echo >> $OUT_UNINSTALL_FILE
+# echo "# Custom Resource Empty Instances" >> $OUT_UNINSTALL_FILE
+# cat kubewatcher-crins.yaml >> $OUT_UNINSTALL_FILE
+# echo "---" >> $OUT_UNINSTALL_FILE
+# echo >> $OUT_UNINSTALL_FILE
 
 echo "# RBAC Role Bindings" >> $OUT_UNINSTALL_FILE
 cat kubewatcher-rb.yaml >> $OUT_UNINSTALL_FILE
